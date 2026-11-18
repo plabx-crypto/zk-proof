@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>zk-proof Web GUI</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>zk-proof Web GUI</h1>
+        <p>Generate and verify zk-proofs, manage nullifiers</p>
+    </header>
+
+    <nav>
+        <button class="tab-btn active" data-tab="rangeproof">Rangeproof</button>
+        <button class="tab-btn" data-tab="nullifier">Nullifier</button>
+        <button class="tab-btn" data-tab="health">Health Check</button>
+        <button class="tab-btn" data-tab="api-reference">API Reference</button>
+    </nav>
+
+    <main>
+        <!-- Rangeproof Section -->
+        <section id="rangeproof" class="tab-content active">
+            <h2>Rangeproof Generation & Verification</h2>
+            
+            <div class="form-section">
+                <h3>Generate Rangeproof</h3>
+                <div class="input-group">
+                    <label for="range-value">Value (0 to 2^64-1):</label>
+                    <input type="number" id="range-value" min="0" max="18446744073709551615" value="100">
+                </div>
+                <div class="input-group">
+                    <label for="range-bits">Bits (default: 64):</label>
+                    <input type="number" id="range-bits" min="1" max="64" value="64">
+                </div>
+                <button onclick="generateRangeproof()">Generate Proof</button>
+                <div id="rangeproof-result" class="result-box"></div>
+            </div>
+
+            <div class="form-section">
+                <h3>Verify Rangeproof</h3>
+                <div class="input-group">
+                    <label for="verify-proof">Proof (JSON):</label>
+                    <textarea id="verify-proof" rows="4" placeholder='{"commitment": "...", "proof": "..."}'></textarea>
+                </div>
+                <button onclick="verifyRangeproof()">Verify Proof</button>
+                <div id="verify-result" class="result-box"></div>
+            </div>
+        </section>
+
+        <!-- Nullifier Section -->
+        <section id="nullifier" class="tab-content">
+            <h2>Nullifier Operations</h2>
+            
+            <div class="form-section">
+                <h3>Generate Nullifier</h3>
+                <div class="input-group">
+                    <label for="nullifier-input">User Secret:</label>
+                    <input type="text" id="nullifier-input" placeholder="Enter user secret...">
+                </div>
+                <button onclick="generateNullifier()">Generate Nullifier</button>
+                <div id="nullifier-result" class="result-box"></div>
+            </div>
+
+            <div class="form-section">
+                <h3>Register Nullifier</h3>
+                <div class="input-group">
+                    <label for="register-nullifier-input">User Secret:</label>
+                    <input type="text" id="register-nullifier-input" placeholder="Enter user secret...">
+                </div>
+                <button onclick="registerNullifier()">Register Nullifier</button>
+                <div id="nullifier-register-result" class="result-box"></div>
+            </div>
+
+            <div class="form-section">
+                <h3>Verify Nullifier</h3>
+                <div class="input-group">
+                    <label for="verify-nullifier-input">Input:</label>
+                    <input type="text" id="verify-nullifier-input" placeholder="Enter input value...">
+                </div>
+                <div class="input-group">
+                    <label for="verify-nullifier-hash">Nullifier Hash:</label>
+                    <input type="text" id="verify-nullifier-hash" placeholder="Enter nullifier hash...">
+                </div>
+                <button onclick="verifyNullifier()">Verify Nullifier</button>
+                <div id="nullifier-verify-result" class="result-box"></div>
+            </div>
+        </section>
+
+        <!-- Health Check Section -->
+        <section id="health" class="tab-content">
+            <h2>Health Check</h2>
+            <div class="form-section">
+                <button onclick="checkHealth()">Check Server Status</button>
+                <div id="health-result" class="result-box"></div>
+            </div>
+        </section>
+
+        <!-- API Reference Section -->
+        <section id="api-reference" class="tab-content">
+            <h2>API Reference</h2>
+            
+            <div class="api-endpoint">
+                <h3>POST /rangeproof/generate</h3>
+                <p>Generate a rangeproof for a given value.</p>
+                <h4>Request Body:</h4>
+                <pre>{
+  "value": 100,
+  "bits": 64
+}</pre>
+                <h4>Response:</h4>
+                <pre>{
+  "commitment": "...",
+  "proof": "..."
+}</pre>
+            </div>
+
+            <div class="api-endpoint">
+                <h3>POST /rangeproof/verify</h3>
+                <p>Verify a rangeproof.</p>
+                <h4>Request Body:</h4>
+                <pre>{
+  "commitment": "...",
+  "proof": "..."
+}</pre>
+                <h4>Response:</h4>
+                <pre>{
+  "valid": true
+}</pre>
+            </div>
+
+            <div class="api-endpoint">
+                <h3>POST /nullifier/generate</h3>
+                <p>Generate a nullifier hash from a user secret.</p>
+                <h4>Request Body:</h4>
+                <pre>{
+  "user_secret": "your_secret",
+  "scope": "poh/v1"
+}</pre>
+                <h4>Response:</h4>
+                <pre>{
+  "nullifier": "..."
+}</pre>
+            </div>
+
+            <div class="api-endpoint">
+                <h3>POST /nullifier/verify</h3>
+                <p>Verify a nullifier against its input.</p>
+                <h4>Request Body:</h4>
+                <pre>{
+  "input": "some_input",
+  "nullifier": "..."
+}</pre>
+                <h4>Response:</h4>
+                <pre>{
+  "valid": true
+}</pre>
+            </div>
+            <div class="api-endpoint">
+                <h3>POST /nullifier/register</h3>
+                <p>Register a nullifier in the registry.</p>
+                <h4>Request Body:</h4>
+                <pre>{
+  "nullifier": "...",
+  "scope": "poh/v1"
+}</pre>
+                <h4>Response:</h4>
+                <pre>{
+  "registered": true,
+  "message": "..."
+}</pre>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>zk-proof Web GUI &copy; 2026</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>

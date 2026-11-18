@@ -14,14 +14,10 @@ from urllib.parse import urlparse, parse_qs
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from poh import (
-    load_group,
-    commit,
-    range_prove,
-    range_verify,
-    compute_nullifier_from_secret,
-    NullifierRegistry,
-)
+from poh.group import rand_scalar
+from poh import load_group, commit
+from poh.rangeproof import prove as range_prove, verify as range_verify
+from poh.nullifier import compute_nullifier_from_secret, NullifierRegistry
 
 # Global state
 GROUP = load_group()
@@ -48,6 +44,29 @@ class ZKProofHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(json.dumps(data).encode())
     
+    def send_html_page(self):
+        """Send HTML frontend page."""
+        self.send_response(200)
+        self.send_header('Content-Type', 'text/html; charset=utf-8')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+        with open(Path(__file__).parent / 'frontend' / 'index.html') as f:
+            self.wfile.write(f.read().encode())
+
+    def send_static_file(self, filepath, content_type):
+        """Send a static file (CSS, JS)."""
+        full_path = Path(__file__).parent / filepath
+        if not full_path.exists():
+            self.send_error_json('File not found', 404)
+            return
+        
+        self.send_response(200)
+        self.send_header('Content-Type', content_type + '; charset=utf-8')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+        with open(full_path, 'r') as f:
+            self.wfile.write(f.read().encode())
+
     def send_error_json(self, message, status=400):
         """Send error JSON response."""
         self.send_json_response({'error': message}, status)
@@ -83,9 +102,15 @@ class ZKProofHandler(BaseHTTPRequestHandler):
             self.handle_fingerprint()
         elif path == '/api/nullifier/stats':
             self.handle_registry_stats()
+        elif path == '/' or path.startswith('/frontend'):
+            self.send_html_page()
+        elif path == '/styles.css':
+            self.send_static_file('frontend/styles.css', 'text/css')
+        elif path == '/app.js':
+            self.send_static_file('frontend/app.js', 'application/javascript')
         else:
             self.send_error_json('Not found', 404)
-    
+
     def do_POST(self):
         """Handle POST requests."""
         parsed = urlparse(self.path)
@@ -181,7 +206,9 @@ class ZKProofHandler(BaseHTTPRequestHandler):
             if blinding is not None:
                 commitment, proof = range_prove(GROUP, value, blinding, bits)
             else:
-                commitment, proof = range_prove(GROUP, value, None, bits)
+                # Generate random blinding factor when not provided
+                blinding = rand_scalar(GROUP.q)
+                commitment, proof = range_prove(GROUP, value, blinding, bits)
             
             bit_proofs = []
             for bp in proof.bit_proofs:
