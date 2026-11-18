@@ -172,6 +172,70 @@ pip install pytest
 pytest tests/test_nullifier.py -v
 ```
 
+## Running the Web Server
+
+The project includes a built-in web server using Python's standard `http.server` module—no Flask or external dependencies required.
+
+### Start the Server
+
+```bash
+cd /home/clinebox/Cloud/GitHub/zk-proof
+
+python3 webserver/backend.py
+```
+
+By default, the server runs on `http://0.0.0.0:8080`.
+
+### Command-Line Options
+
+```bash
+# Custom host and port
+python3 webserver/backend.py --host 127.0.0.1 --port 3000
+```
+
+Available options:
+- `--host`: Host to bind to (default: `0.0.0.0`)
+- `--port`: Port to listen on (default: `8080`)
+
+### Available API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/health` | Health check |
+| GET | `/api/params/fingerprint` | Get group parameters fingerprint |
+| POST | `/api/rangeproof/generate` | Generate a range proof |
+| POST | `/api/rangeproof/verify` | Verify a range proof |
+| POST | `/api/nullifier/generate` | Generate nullifier from user secret |
+| POST | `/api/nullifier/register` | Register a nullifier |
+| POST | `/api/nullifier/check` | Check if a nullifier is used |
+| GET | `/api/nullifier/stats` | Get registry statistics |
+
+### Example API Requests
+
+**Health Check:**
+```bash
+curl http://localhost:8080/api/health
+```
+
+**Generate a Nullifier:**
+```bash
+curl -X POST http://localhost:8080/api/nullifier/generate \
+  -H "Content-Type: application/json" \
+  -d '{"user_secret": "user@example.com", "scope": "poh/v1"}'
+```
+
+**Register a Nullifier:**
+```bash
+curl -X POST http://localhost:8080/api/nullifier/register \
+  -H "Content-Type: application/json" \
+  -d '{"nullifier": "a1b2c3...", "scope": "poh/v1"}'
+```
+
+**Check Registry Stats:**
+```bash
+curl http://localhost:8080/api/nullifier/stats
+```
+
 Test coverage:
 - Nullifier determinism
 - Scope/user differentiation  
